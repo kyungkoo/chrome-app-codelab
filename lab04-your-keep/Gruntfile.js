@@ -23,15 +23,40 @@ module.exports = function (grunt) {
             options: {
                 spawn: false
             },
+            js: {
+                files: ['<%= yeoman.app %>/scripts/{,*/}*.js'],
+                tasks: ['jshint'],
+                options: {
+                    livereload: true
+                }
+            },
+            jstest: {
+                files: ['test/spec/{,*/}*.js'],
+                tasks: ['test:watch']
+            },
+            styles: {
+                files: ['<%= yeoman.app %>/styles/{,*/}*.css'],
+                tasks: ['newer:copy:styles']
+            },
+            gruntfile: {
+                files: ['Gruntfile.js']
+            },
             livereload: {
                 options: {
                     livereload: '<%= connect.livereload.options.livereload %>'
                 },
                 files: [
                     '<%= yeoman.app %>/*.html',
-                    '<%= yeoman.app %>/styles/{,*/}*.css',
-                    '<%= yeoman.app %>/scripts/{,*/}*.js',
-                    '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}',
+                    '.tmp/styles/{,*/}*.css',
+                    '.tmp/scripts/{,*/}*.js',
+                    '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}'
+                ]
+            },
+            chromeapp: {
+                // options: {
+                //     livereload: '<%= connect.livereload.options.livereload %>'
+                // },
+                files: [
                     '<%= yeoman.app %>/manifest.json',
                     '<%= yeoman.app %>/_locales/{,*/}*.json'
                 ]
@@ -40,12 +65,21 @@ module.exports = function (grunt) {
         connect: {
             options: {
                 port: 9000,
+                livereload: 35729,
                 // change this to '0.0.0.0' to access the server from outside
                 hostname: 'localhost'
             },
             livereload: {
                 options: {
-                    livereload: 35729,
+                    open: true,
+                    base: [
+                        '.tmp',
+                        '<%= yeoman.app %>'
+                    ]
+                }
+            },
+            chromeapp: {
+                options: {
                     base: [
                         '<%= yeoman.app %>'
                     ]
@@ -69,7 +103,8 @@ module.exports = function (grunt) {
                         '!<%= yeoman.dist %>/.git*'
                     ]
                 }]
-            }
+            },
+            server: '.tmp'
         },
         jshint: {
             options: {
@@ -209,9 +244,19 @@ module.exports = function (grunt) {
                         'styles/fonts/{,*/}*.*'
                     ]
                 }]
+            },
+            styles: {
+                expand: true,
+                dot: true,
+                cwd: '<%= yeoman.app %>/styles',
+                dest: '.tmp/styles/',
+                src: '{,*/}*.css'
             }
         },
         concurrent: {
+            server: [
+                'copy:styles'
+            ],
             dist: [
                 'compass:dist',
                 'imagemin',
@@ -249,6 +294,24 @@ module.exports = function (grunt) {
         }
     });
 
+    grunt.registerTask('serve', function (target) {
+        if (target === 'dist') {
+            return grunt.task.run(['build', 'connect:dist:keepalive']);
+        }
+
+        grunt.task.run([
+            'clean:server',
+            'concurrent:server',
+            'connect:livereload',
+            'watch'
+        ]);
+    });
+
+    grunt.registerTask('server', function (target) {
+        grunt.log.warn('The `server` task has been deprecated. Use `grunt serve` to start a server.');
+        grunt.task.run([target ? ('serve:' + target) : 'serve']);
+    });
+
     grunt.registerTask('debug', function (opt) {
         if (opt && opt === 'jshint') {
             var watch = grunt.config('watch');
@@ -258,7 +321,7 @@ module.exports = function (grunt) {
 
         grunt.task.run([
             'jshint',
-            'connect:livereload',
+            'connect:chromeapp',
             'watch'
         ]);
     });

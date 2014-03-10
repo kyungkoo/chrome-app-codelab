@@ -1,0 +1,14 @@
+<div class="card">
+   <div class="card-title" ng-if="card.title.length > 0 || focused">
+      <input placeholder="Title" ng-model="card.title">
+   </div>
+   <div class="card-text">
+      <textarea placeholder="Note" msd-elastic="\n" ng-model="card.text"
+                spellcheck="true", maxlength="9999" aria-multiline="true",
+                rows="1">
+      </textarea>
+   </div>
+   <div class="card-commands" ng-if="focused">
+      <button role="done" ng-click="done()">Done</button>
+   </div>
+</div>

@@ -1,10 +1,10 @@
 {
     "appName": {
-        "message": "secondapp",
+        "message": "Your Keep",
         "description": "The name of the application"
     },
     "appDescription": {
-        "message": "secondapp",
+        "message": "Your Keep",
         "description": "The description of the application"
     }
 }
