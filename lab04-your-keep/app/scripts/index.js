@@ -7,25 +7,27 @@ app.directive('keepCardController', function($window) {
     controller: function ($scope) {
       $scope.editedCard = null;
 
+      $scope.unfocus = function(replaceCard, opts) {
+        $scope.editedCard && $scope.editedCard.unfocus(opts);
+        $scope.editedCard = replaceCard;
+      }
+
       // Handle editing start event, take focus from previous card and then
       // set focus to current card
       $scope.$on('editingStart', function(e) {
-        $scope.editedCard && $scope.editedCard.unfocus();
-        $scope.editedCard = e.targetScope;
+        $scope.unfocus(e.targetScope);
         $scope.editedCard.focus();
       });
 
       // Handle editing end with done event, take focus from the card
       $scope.$on('editingDone', function(e, done) {
-        $scope.editedCard && $scope.editedCard.unfocus(done);
-        $scope.editedCard = null;
+        $scope.unfocus(null, done);
       });
 
       // To detect focus on out of card views Take focus from last card
       $window.onclick = function() {
         $scope.$apply(function() {
-          $scope.editedCard && $scope.editedCard.unfocus();
-          $scope.editedCard = null;
+          $scope.unfocus(null);
         });
       };
     }
