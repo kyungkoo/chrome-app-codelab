@@ -1,11 +1,17 @@
 (function(chrome, window) {
   'use strict';
 
-  if (typeof chrome !== 'undefined') {
+  if (typeof chrome !== 'undefined' && typeof chrome !== 'object') {
     window.chrome = {};
   }
 
-  if (chrome && !chrome.storage) {
+  if (!chrome.runtime) {
+    chrome.runtime = {
+      lastError: null
+    };
+  }
+
+  if (!chrome.storage) {
     chrome.storage = {
       onChanged: {
         addListener: function(cb) {
@@ -14,14 +20,17 @@
       },
       sync: {
         get: function(keys, cb) {
-          cb(localStorage.getItem(keys));
+          var data = localStorage.getItem(keys);
+          var args = {};
+          args[keys] = JSON.parse(data);
+          cb(args);
         },
         getBytesInUse: function(keys) {
           return 1028 * keys;
         },
         set: function(items, cb) {
           for(var item in items) {
-            localStorage.setItem(item, items[item]);
+            localStorage.setItem(item, JSON.stringify(items[item]));
           }
 
           cb();
