@@ -1,12 +1,12 @@
 'use strict';
 
 // Listens for the app launching then creates the window
+// [chrome.app.runtime - Google Chrome](http://goo.gl/GcK13l)
 chrome.app.runtime.onLaunched.addListener(function() {
-  var width = 340;
+  var width = 360;
   var height = 500;
 
   chrome.app.window.create('index.html', {
-    id: 'main',
     bounds: {
         width: width,
         height: height,

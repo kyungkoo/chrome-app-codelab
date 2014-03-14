@@ -320,7 +320,7 @@ module.exports = function (grunt) {
         }
 
         grunt.task.run([
-            'jshint',
+            // 'jshint',
             'connect:chromeapp',
             'watch'
         ]);

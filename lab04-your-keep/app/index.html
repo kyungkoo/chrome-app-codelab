@@ -2,16 +2,19 @@
 <html ng-app="keepApp" ng-csp>
   <head>
       <meta charset="utf-8">
-      <title>Keep Clone fro Chrome Apps Codelab</title>
+      <title>Keep Clone from Chrome Apps Codelab</title>
       <!-- build:css styles/main.css -->
       <link rel="stylesheet" href="styles/main.css">
       <!-- endbuild -->
   </head>
   <body>
     <div ng-controller="MainCtrl">
-      <ul>
+      <ul keep-card-controller>
+        <li>
+          <keep-card ng-model="topCard" on-update="add(card)"></keep-card>
+        </li>
         <li ng-repeat="card in cards">
-          <keep-card ng-model="card" ng-change='onchange(card)'></keep-card>
+          <keep-card ng-model="card" on-update="update(card)" on-delete="delete(card)"></keep-card>
         </li>
       </ul>
     </div>
@@ -19,6 +22,7 @@
     <!-- build:js scripts/vendor.js -->
     <script src="bower_components/angular/angular.min.js"></script>
     <script src="bower_components/angular-elastic/elastic.js"></script>
+    <script src="bower_components/angular-uuid4/angular-uuid4.min.js"></script>
     <!-- endbuild -->
 
     <!-- build:js scripts/index.js -->

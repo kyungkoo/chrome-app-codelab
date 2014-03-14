@@ -1,84 +1,155 @@
 'use strict';
 
-angular.module('keepApp', ['monospaced.elastic'])
-  .controller('MainCtrl', function($scope) {
-    $scope.cards = [
-      {
-        title: '',
-        text: ''
-      },
-      {
-        title: 'title1',
-        text: 'text1'
-      },
-      {
-        title: 'title2',
-        text: 'text2'
-      }
-    ];
+var app = angular.module('keepApp', ['monospaced.elastic', 'uuid4']);
 
-    $scope.onchange = function(card) {
-      // Add empty card on top of cards
-      if ($scope.cards[0] === card) {
-        $scope.cards.unshift({title: '', text: ''});
-      }
-    };
+app.directive('keepCardController', function($window) {
+  return {
+    controller: function ($scope) {
+      $scope.editedCard = null;
 
-  })
-  .directive('keepCard', function() {
-    return {
-      restrict: 'E',
-      replace: true,
-      scope: {
-        card: '=ngModel',
-        change: '&ngChange'
-      },
-      templateUrl: 'views/keep-card.html',
-      link: function(scope, elem) {
-        scope.focused = false;
+      // Handle editing start event, take focus from previous card and then
+      // set focus to current card
+      $scope.$on('editingStart', function(e) {
+        $scope.editedCard && $scope.editedCard.unfocus();
+        $scope.editedCard = e.targetScope;
+        $scope.editedCard.focus();
+      });
 
-        // folding card if related target is not family of this card
-        // or not, keep expand mode
-        var unfocus = function(e) {
-          if (!e || !e.relatedTarget ||
-              this.parentNode.parentNode !== e.relatedTarget.parentNode.parentNode) {
-            scope.editedCard = undefined;
-            scope.focused = false;
-            // Check that digest already in progress
-            if (scope.$root.$$phase !== '$apply' && scope.$root.$$phase !== '$digest') {
-              scope.$digest();
-            }
-          }
-        };
+      // Handle editing end with done event, take focus from the card
+      $scope.$on('editingDone', function(e, done) {
+        $scope.editedCard && $scope.editedCard.unfocus(done);
+        $scope.editedCard = null;
+      });
 
-        var focus = function() {
-          // Deepcopy current card data to compare
-          scope.editedCard = angular.extend({}, scope.card);
-          scope.focused = true;
-          scope.$digest();
-        };
-
-        scope.done = function() {
-          // Trigger `change` event to $parent scope if card has been changed
-          if (scope.editedCard && !angular.equals(scope.editedCard, scope.card)) {
-            scope.change({card: scope.card});
-          }
-          unfocus();
-        };
-
-        // Bind focus / blur event fixed controls
-        elem.find('textarea').bind('focus', focus);
-        elem.find('textarea').bind('blur', unfocus);
-
-        // Refresh bind event to unfixed controls when focused has been changed
-        scope.$watch('scope.focused', function() {
-          // Bind focus event to expand the card
-          // and bind blur event all of input control to fold the card
-          elem.find('input').bind('focus', focus);
-          elem.find('input').bind('blur', unfocus);
-          elem.find('button').bind('blur', unfocus);
+      // To detect focus on out of card views Take focus from last card
+      $window.onclick = function() {
+        $scope.$apply(function() {
+          $scope.editedCard && $scope.editedCard.unfocus();
+          $scope.editedCard = null;
         });
-      }
+      };
+    }
+  };
+});
+
+app.directive('keepCard', function($timeout) {
+  return {
+    restrict: 'E',
+    replace: true,
+    require: '^keepCardController',
+    scope: {
+      card: '=ngModel',
+      update: '&onUpdate',
+      delete: '&onDelete'
+    },
+    templateUrl: 'views/keep-card.html',
+    link: function(scope, elem) {
+      scope.focused = false;
+      scope.cachedCard = null;
+      scope.hover = false;
+
+      // focus and cache card data to editing
+      scope.focus = function() {
+        scope.focused = true;
+        scope.cachedCard = angular.extend({}, scope.card);
+        $timeout(function() {
+          document.activeElement === document.body && elem.find('textarea')[0].focus();
+        });
+      };
+
+      // unfocus and revert card data from cached
+      scope.unfocus = function(done) {
+        if (!done) {
+          scope.card = angular.extend({}, scope.cachedCard);
+        }
+
+        // Cleanup variables
+        scope.focused = false;
+        scope.cachedCard = null;
+        scope.hover = false;
+      };
+
+      scope.done = function(e) {
+        // If card has been changed, notify change event
+        if (!angular.equals(scope.cachedCard, scope.card)) {
+          scope.update({card: scope.card});
+        }
+
+        // Send editing done event to controller and prevent progagation
+        scope.$emit('editingDone', {done: true});
+        e.stopPropagation();
+      };
+
+      scope.select = function(e) {
+        // Send editing starting event to controller and prevent progagation
+        !scope.focused && scope.$emit('editingStart');
+        e.stopPropagation();
+      };
+
+      scope.deleteme = function(e) {
+        scope.delete({card: scope.card});
+        e.stopPropagation();
+      };
+    }
+  };
+});
+
+app.service('CardsStorage', ['$q', function ($q) {
+  return {
+    load: function() {
+      var deferred = $q.defer();
+      chrome.storage.sync.get('cards', function(cards) {
+        deferred[chrome.runtime.lastError ? 'reject' : 'resolve'](cards);
+      });
+
+      return deferred.promise;
+    },
+    save: function(cards) {
+      var deferred = $q.defer();
+      chrome.storage.sync.set({'cards': cards}, function() {
+        deferred[chrome.runtime.lastError ? 'reject' : 'resolve']();
+      });
+
+      return deferred.promise;
+    },
+    clear: function() {
+      chrome.storage.sync.clear();
+    }
+  };
+}]);
+
+app.controller('MainCtrl', function($scope, CardsStorage, uuid4) {
+  var newCard = function() {
+    return {
+      title: '',
+      text: '',
+      uuid: uuid4.generate()
     };
+  };
+
+  $scope.topCard = newCard();
+  $scope.cards = [];
+
+  $scope.$watch('$viewContentLoaded', function() {
+    CardsStorage.load().then(function(data) {
+      if (data.cards) {
+        $scope.cards = angular.copy(data.cards);
+      }
+    });
   });
 
+  $scope.add = function(card) {
+    $scope.cards.unshift(card);
+    CardsStorage.save($scope.cards);
+    $scope.topCard = newCard();
+  };
+
+  $scope.delete = function(card) {
+    $scope.cards.splice($scope.cards.indexOf(card), 1);
+    CardsStorage.save($scope.cards);
+  };
+
+  $scope.update = function() {
+    CardsStorage.save($scope.cards);
+  };
+});
