@@ -1,22 +1,23 @@
 {
-  	"name": "__MSG_appName__",
-  	"description": "__MSG_appDescription__",
-  	"version": "0.0.1",
-  	"manifest_version": 2,
-  	"default_locale": "en",
-  	"permissions": [
-      "storage"
+    "name": "__MSG_appName__",
+    "description": "__MSG_appDescription__",
+    "version": "0.0.19",
+    "manifest_version": 2,
+    "default_locale": "en",
+    "permissions": [
+        "storage"
     ],
-  	"icons": {
-  		"16": "images/icon-16.png",
-  		"128": "images/icon-128.png"
-  	},
-  	"app": {
-  		"background": {
-  			"scripts": [
-  				"scripts/main.js",
-  				"scripts/chromereload.js"
-  			]
-  		}
-  	}
+    "icons": {
+        "16": "images/icon-16.png",
+        "128": "images/icon-128.png"
+    },
+    "app": {
+        "background": {
+            "scripts": [
+                "scripts/main.js",
+                "scripts/chromereload.js"
+            ]
+        }
+    },
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkeTY3ThuvWbwRP7VCgQcbC08Ll1VL5E8cNcHSqGsiTt+Y4WaxJp8V+yR0gsAf+yD2m6Pr7NtAsWATevfFw9a2Gqfwax2wFSoqNfl2IMx3Q+9JH3ti2zTdpzZjC+Wr7Q3Iq1npMlqaWA3K5NzEbJLnnV8vJ1AoAGBy4Kp5n8ezB0RpSfhD0+VsT7puneyOEwmbImgE73OyGBCp8iKcI+08mWI00HN/gQRXeAPsChRlTuZc+NT62LR+yPrPmC1Sp4frfgguA+lFZcnZXMMwiETNeiB8emqK8hWB1p8ZW98YKSzE6Vg8Vw8gbmjGJ+t+wFSYhkcIOGXZ6u75LC+XGeujwIDAQAB"
 }

@@ -147,6 +147,14 @@ module.exports = function (grunt) {
                 }
             }
         },
+        ngmin: {
+            dist: {
+              files: [{
+                  src: ['<%= yeoman.dist %>/scripts/index.js'],
+                  dest: '<%= yeoman.dist %>/scripts/index.js'
+              }]
+            }
+        },
         useminPrepare: {
             options: {
                 dest: '<%= yeoman.dist %>'
@@ -241,7 +249,8 @@ module.exports = function (grunt) {
                         '*.{ico,png,txt}',
                         'images/{,*/}*.{webp,gif}',
                         '_locales/{,*/}*.json',
-                        'styles/fonts/{,*/}*.*'
+                        'styles/fonts/{,*/}*.*',
+                        'views/{,*/*}*.html'
                     ]
                 }]
             },
@@ -338,6 +347,7 @@ module.exports = function (grunt) {
         'concurrent:dist',
         'cssmin',
         'concat',
+        'ngmin',
         'uglify',
         'copy',
         'usemin',

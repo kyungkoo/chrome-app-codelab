@@ -1,40 +1,44 @@
 'use strict';
 
-var app = angular.module('keepApp', ['monospaced.elastic', 'uuid4']);
+angular.module('keepApp', ['monospaced.elastic', 'uuid4'])
 
-app.directive('keepCardController', function($window) {
+// Keep card view controller
+angular.module('keepApp').directive('keepCardController', ['$window', function($window) {
   return {
     controller: function ($scope) {
       $scope.editedCard = null;
 
+      // Take focus from prevois card passes to othe card
       $scope.unfocus = function(replaceCard, opts) {
         $scope.editedCard && $scope.editedCard.unfocus(opts);
         $scope.editedCard = replaceCard;
       }
 
-      // Handle editing start event, take focus from previous card and then
+      // For editing start event, take focus from previous card and then
       // set focus to current card
-      $scope.$on('editingStart', function(e) {
+      $scope.$on('startEditing', function(e) {
         $scope.unfocus(e.targetScope);
         $scope.editedCard.focus();
       });
 
-      // Handle editing end with done event, take focus from the card
-      $scope.$on('editingDone', function(e, done) {
+      // For editing done event, take focus from the card
+      $scope.$on('doneEditing', function(e, done) {
         $scope.unfocus(null, done);
       });
 
       // To detect focus on out of card views Take focus from last card
       $window.onclick = function() {
         $scope.$apply(function() {
-          $scope.unfocus(null);
+          // $scope.unfocus(null);
+          $scope.$emit('doneEditing', {done: false});
         });
       };
     }
   };
-});
+}])
 
-app.directive('keepCard', function($timeout) {
+// Keep card view
+.directive('keepCard', ['$timeout', function($timeout) {
   return {
     restrict: 'E',
     replace: true,
@@ -78,13 +82,13 @@ app.directive('keepCard', function($timeout) {
         }
 
         // Send editing done event to controller and prevent progagation
-        scope.$emit('editingDone', {done: true});
+        scope.$emit('doneEditing', {done: true});
         e.stopPropagation();
       };
 
       scope.select = function(e) {
         // Send editing starting event to controller and prevent progagation
-        !scope.focused && scope.$emit('editingStart');
+        !scope.focused && scope.$emit('startEditing');
         e.stopPropagation();
       };
 
@@ -94,9 +98,10 @@ app.directive('keepCard', function($timeout) {
       };
     }
   };
-});
+}])
 
-app.service('CardsStorage', ['$q', function ($q) {
+// Keep card storage service
+.service('CardsStorage', ['$q', function ($q) {
   return {
     load: function() {
       var deferred = $q.defer();
@@ -118,9 +123,10 @@ app.service('CardsStorage', ['$q', function ($q) {
       chrome.storage.sync.clear();
     }
   };
-}]);
+}])
 
-app.controller('MainCtrl', function($scope, CardsStorage, uuid4) {
+// App main controller
+.controller('MainCtrl', ['$scope', 'CardsStorage', 'uuid4', function($scope, CardsStorage, uuid4) {
   var newCard = function() {
     return {
       title: '',
@@ -154,4 +160,4 @@ app.controller('MainCtrl', function($scope, CardsStorage, uuid4) {
   $scope.update = function() {
     CardsStorage.save($scope.cards);
   };
-});
+}]);

@@ -1,6 +1,8 @@
 (function(chrome, window) {
   'use strict';
 
+  console.log(chrome)
+
   if (typeof chrome !== 'undefined' && typeof chrome !== 'object') {
     window.chrome = {};
   }
