@@ -7,11 +7,12 @@ chrome.app.runtime.onLaunched.addListener(function() {
   var height = 500;
 
   chrome.app.window.create('index.html', {
+    id: 'YourKeepWindow',
     bounds: {
-        width: width,
-        height: height,
-        left: Math.round((screen.availWidth - width) / 2),
-        top: Math.round((screen.availHeight - height) / 2)
+      width: width,
+      height: height,
+      left: Math.round((screen.availWidth - width) / 2),
+      top: Math.round((screen.availHeight - height) / 2)
     }
   });
 });

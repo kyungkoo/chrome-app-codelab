@@ -3,7 +3,7 @@
 angular.module('keepApp', ['monospaced.elastic', 'uuid4'])
 
 // Keep card view controller
-angular.module('keepApp').directive('keepCardController', ['$window', function($window) {
+.directive('keepCardController', ['$window', function($window) {
   return {
     controller: function ($scope) {
       $scope.editedCard = null;
@@ -16,21 +16,20 @@ angular.module('keepApp').directive('keepCardController', ['$window', function($
 
       // For editing start event, take focus from previous card and then
       // set focus to current card
-      $scope.$on('startEditing', function(e) {
+      $scope.$on('keepcard:select', function(e) {
         $scope.unfocus(e.targetScope);
         $scope.editedCard.focus();
       });
 
       // For editing done event, take focus from the card
-      $scope.$on('doneEditing', function(e, done) {
+      $scope.$on('keepcard:done', function(e, done) {
         $scope.unfocus(null, done);
       });
 
       // To detect focus on out of card views Take focus from last card
       $window.onclick = function() {
         $scope.$apply(function() {
-          // $scope.unfocus(null);
-          $scope.$emit('doneEditing', {done: false});
+          $scope.$emit('keepcard:done', false);
         });
       };
     }
@@ -59,7 +58,9 @@ angular.module('keepApp').directive('keepCardController', ['$window', function($
         scope.focused = true;
         scope.cachedCard = angular.extend({}, scope.card);
         $timeout(function() {
-          document.activeElement === document.body && elem.find('textarea')[0].focus();
+          if (document.activeElement === document.body) {
+            elem.find('textarea')[0].focus();
+          }
         });
       };
 
@@ -82,13 +83,13 @@ angular.module('keepApp').directive('keepCardController', ['$window', function($
         }
 
         // Send editing done event to controller and prevent progagation
-        scope.$emit('doneEditing', {done: true});
+        scope.$emit('keepcard:done', {done: true});
         e.stopPropagation();
       };
 
       scope.select = function(e) {
-        // Send editing starting event to controller and prevent progagation
-        !scope.focused && scope.$emit('startEditing');
+        // Send select event to view controller and prevent progagation
+        !scope.focused && scope.$emit('keepcard:select');
         e.stopPropagation();
       };
 
@@ -101,7 +102,13 @@ angular.module('keepApp').directive('keepCardController', ['$window', function($
 }])
 
 // Keep card storage service
-.service('CardsStorage', ['$q', function ($q) {
+.service('CardsStorage', ['$rootScope', '$q', function ($rootScope, $q) {
+  chrome.storage.onChanged.addListener(function(changes, namespace) {
+    if (changes['cards'] && namespace === 'sync') {
+      $rootScope.$broadcast('cardsstorage:sync', changes['cards']);
+    }
+  });
+
   return {
     load: function() {
       var deferred = $q.defer();
@@ -126,7 +133,8 @@ angular.module('keepApp').directive('keepCardController', ['$window', function($
 }])
 
 // App main controller
-.controller('MainCtrl', ['$scope', 'CardsStorage', 'uuid4', function($scope, CardsStorage, uuid4) {
+.controller('MainCtrl', ['$scope', 'CardsStorage', 'uuid4',
+  function($scope, CardsStorage, uuid4) {
   var newCard = function() {
     return {
       title: '',
@@ -137,6 +145,15 @@ angular.module('keepApp').directive('keepCardController', ['$window', function($
 
   $scope.topCard = newCard();
   $scope.cards = [];
+
+  $scope.$on('cardsstorage:sync', function(e, cards) {
+    if (cards.newValue) {
+      $scope.$apply(function() {
+        // What a MASSIVE update of card array
+        $scope.cards = angular.copy(cards.newValue);
+      });
+    }
+  });
 
   $scope.$watch('$viewContentLoaded', function() {
     CardsStorage.load().then(function(data) {
