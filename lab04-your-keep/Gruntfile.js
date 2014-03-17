@@ -23,39 +23,28 @@ module.exports = function (grunt) {
             options: {
                 spawn: false
             },
-            js: {
-                files: ['<%= yeoman.app %>/scripts/{,*/}*.js'],
-                tasks: ['jshint'],
-                options: {
-                    livereload: true
-                }
-            },
             jstest: {
                 files: ['test/spec/{,*/}*.js'],
                 tasks: ['test:watch']
-            },
-            styles: {
-                files: ['<%= yeoman.app %>/styles/{,*/}*.css'],
-                tasks: ['newer:copy:styles']
             },
             gruntfile: {
                 files: ['Gruntfile.js']
             },
             livereload: {
                 options: {
-                    livereload: '<%= connect.livereload.options.livereload %>'
+                    livereload: '<%= connect.options.livereload %>'
                 },
                 files: [
                     '<%= yeoman.app %>/*.html',
-                    '.tmp/styles/{,*/}*.css',
-                    '.tmp/scripts/{,*/}*.js',
+                    '<%= yeoman.app %>/styles/{,*/}*.css',
+                    '<%= yeoman.app %>/scripts/{,*/}*.js',
                     '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}'
                 ]
             },
             chromeapp: {
-                // options: {
-                //     livereload: '<%= connect.livereload.options.livereload %>'
-                // },
+                options: {
+                    livereload: '<%= connect.options.livereload %>'
+                },
                 files: [
                     '<%= yeoman.app %>/manifest.json',
                     '<%= yeoman.app %>/_locales/{,*/}*.json'
@@ -71,15 +60,16 @@ module.exports = function (grunt) {
             },
             livereload: {
                 options: {
+                    livereload: true,
                     open: true,
                     base: [
-                        '.tmp',
                         '<%= yeoman.app %>'
                     ]
                 }
             },
             chromeapp: {
                 options: {
+                    livereload: true,
                     base: [
                         '<%= yeoman.app %>'
                     ]
@@ -104,7 +94,7 @@ module.exports = function (grunt) {
                     ]
                 }]
             },
-            server: '.tmp'
+            server: {}
         },
         jshint: {
             options: {
@@ -253,18 +243,10 @@ module.exports = function (grunt) {
                         'views/{,*/*}*.html'
                     ]
                 }]
-            },
-            styles: {
-                expand: true,
-                dot: true,
-                cwd: '<%= yeoman.app %>/styles',
-                dest: '.tmp/styles/',
-                src: '{,*/}*.css'
             }
         },
         concurrent: {
             server: [
-                'copy:styles'
             ],
             dist: [
                 'compass:dist',
