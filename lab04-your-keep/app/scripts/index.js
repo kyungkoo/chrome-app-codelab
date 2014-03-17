@@ -12,7 +12,7 @@ angular.module('keepApp', ['monospaced.elastic', 'uuid4'])
       $scope.unfocus = function(replaceCard, opts) {
         $scope.editedCard && $scope.editedCard.unfocus(opts);
         $scope.editedCard = replaceCard;
-      }
+      };
 
       // For editing start event, take focus from previous card and then
       // set focus to current card
@@ -77,7 +77,7 @@ angular.module('keepApp', ['monospaced.elastic', 'uuid4'])
       };
 
       scope.done = function(e) {
-        // If card has been changed, notify change event
+        // If card has changed, notify change event
         if (!angular.equals(scope.cachedCard, scope.card)) {
           scope.update({card: scope.card});
         }
@@ -88,7 +88,7 @@ angular.module('keepApp', ['monospaced.elastic', 'uuid4'])
       };
 
       scope.select = function(e) {
-        // Send select event to view controller and prevent progagation
+        // Send selecting event to view controller and prevent progagation
         !scope.focused && scope.$emit('keepcard:select');
         e.stopPropagation();
       };
@@ -104,8 +104,8 @@ angular.module('keepApp', ['monospaced.elastic', 'uuid4'])
 // Keep card storage service
 .service('CardsStorage', ['$rootScope', '$q', function ($rootScope, $q) {
   chrome.storage.onChanged.addListener(function(changes, namespace) {
-    if (changes['cards'] && namespace === 'sync') {
-      $rootScope.$broadcast('cardsstorage:sync', changes['cards']);
+    if (changes.cards && namespace === 'sync') {
+      $rootScope.$broadcast('cardsstorage:sync', changes.cards);
     }
   });
 
